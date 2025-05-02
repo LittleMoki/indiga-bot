@@ -6,13 +6,11 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
 model User {
   id           Int        @id @default(autoincrement())
   userId       BigInt     @unique
   username     String?
   firstName    String?
-  referrerId   BigInt?
   points       Int        @default(0)
   isSubscribed Boolean    @default(false)
   joinedAt     DateTime   @default(now())
@@ -27,8 +25,7 @@ model Referral {
   referredId BigInt   @unique
   createdAt  DateTime @default(now())
   bonusGiven Boolean  @default(false)
-  user       User     @relation(fields: [userId], references: [id])
-  userId     Int
+  user       User     @relation(fields: [referrerId], references: [userId], onDelete: Cascade)
 
   @@map("referrals")
 }

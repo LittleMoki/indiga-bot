@@ -3,45 +3,42 @@ export async function generateReferralLink(ctx) {
   }
   
   export async function handleReferral(ctx, prisma) {
-    if (!ctx.message || !('text' in ctx.message) || !ctx.from) return;
+    if (!ctx.message?.text || !ctx.from) return;
   
     const messageText = ctx.message.text;
     const referrerId = messageText.split(' ')[1];
     const userId = ctx.from.id;
   
-    // Проверяем валидность реферального кода
+    // Валидация реферального кода
     if (!referrerId || referrerId === String(userId)) return;
   
     try {
-      // Проверяем существование реферера
+      // Проверка существования реферера
       const referrerExists = await prisma.user.findUnique({
-        where: { userId: BigInt(referrerId) }
+        where: { userId: Number(referrerId) }
       });
       if (!referrerExists) return;
   
-      // Проверяем, не регистрировался ли уже пользователь по реферальной ссылке
+      // Проверка на дублирование
       const existingReferral = await prisma.referral.findUnique({
-        where: { referredId: BigInt(userId) }
+        where: { referredId: Number(userId) }
       });
       if (existingReferral) return;
   
-      // Создаем запись о реферале
-      await prisma.referral.create({
-        data: {
-          referrerId: BigInt(referrerId),
-          referredId: BigInt(userId),
-          bonusGiven: true
-        }
-      });
-  
-      // Начисляем балл рефереру
-      await prisma.user.update({
-        where: { userId: BigInt(referrerId) },
-        data: { 
-          points: { increment: 1 },
-          referrals: { connect: { referredId: BigInt(userId) } }
-        }
-      });
+      // Транзакция для атомарного обновления
+      await prisma.$transaction([
+        prisma.referral.create({
+          data: {
+            referrerId: BigInt(referrerId),
+            referredId: BigInt(userId),
+            bonusGiven: true
+          }
+        }),
+        prisma.user.update({
+          where: { userId: BigInt(referrerId) },
+          data: { points: { increment: 1 } }
+        })
+      ]);
   
       console.log(`Начислен балл за реферала: ${userId} -> ${referrerId}`);
     } catch (error) {

@@ -1,83 +1,138 @@
+import { removeKeyboard } from 'telegraf/markup';
+import { handleReferral, generateReferralLink } from '../utils/referralUtils.js';
+import { getMainKeyboard } from '../keyboards.js';
 
 export default function startCommand(bot, prisma) {
   bot.start(async (ctx) => {
-      if (!ctx.message || !('text' in ctx.message)) return;
-      if (!ctx.from) return;
+    if (!ctx.message || !('text' in ctx.message)) return;
+    if (!ctx.from) return;
 
-      const messageText = ctx.message.text;
-      const referrerId = messageText.split(' ')[1] || null;
-      const userId = ctx.from.id;
-      const username = ctx.from.username;
-      const firstName = ctx.from.first_name;
+    const referrerId = ctx.message.text.split(' ')[1];
+    const userId = ctx.from.id;
+    const username = ctx.from.username || 'Новый пользователь';
 
-      try {
-          // Проверяем подписку на канал
-          let isSubscribed = false;
-          try {
-              const member = await ctx.telegram.getChatMember(
-                  process.env.CHANNEL_USERNAME,
-                  userId
-              );
-              isSubscribed = ['member', 'administrator', 'creator'].includes(member.status);
-          } catch (error) {
-              console.error('Error checking subscription:', error);
-          }
+    try {
+      // Обработка реферальной ссылки
+      const referralResult = await handleReferral(ctx, prisma);
 
-          // Работа с пользователем в БД
-          let user = await prisma.user.findUnique({
-              where: { userId: BigInt(userId) }
-          });
+      // Проверка подписки
+      const isSubscribed = await checkSubscription(ctx);
 
-          if (!user) {
-              user = await prisma.user.create({
-                  data: {
-                      userId: BigInt(userId),
-                      username,
-                      firstName,
-                      referrerId: referrerId ? BigInt(referrerId) : null,
-                      isSubscribed
-                  }
-              });
+      // Создание/обновление пользователя
+      await prisma.user.upsert({
+        where: { userId: Number(userId) },
+        create: {
+          userId: Number(userId),
+          username: ctx.from.username,
+          firstName: ctx.from.first_name,
+          isSubscribed
+        },
+        update: {
+          isSubscribed
+        }
+      });
 
-              if (referrerId) {
-                  await prisma.user.update({
-                      where: { userId: BigInt(referrerId) },
-                      data: { points: { increment: 1 } }
-                  });
-              }
-          } else if (user.isSubscribed !== isSubscribed) {
-              await prisma.user.update({
-                  where: { userId: BigInt(userId) },
-                  data: { isSubscribed }
-              });
-          }
-
-          // Отправка соответствующего сообщения
-          if (isSubscribed) {
-              // Если подписан - показываем меню
-              await ctx.reply('Выберите действие:', {
-                  reply_markup: {
-                    keyboard: [
-                      [{ text: '👤 Мой профиль' }],
-                      [{ text: '🔗 Реферальная ссылка' }], 
-                      [{ text: 'ℹ️ Помощь' }],
-                      [{ text: '🏆 Топ 10 лидеров' }]
-                  ],
-                      resize_keyboard: true
-                  }
-              });
-              
-           
-          } else {
-              // Если не подписан - просим подписаться
-              await ctx.reply(
-                  `Для доступа к боту, пожалуйста, подпишитесь на наш канал: ${process.env.CHANNEL_USERNAME}\n\n` +
-                  `После подписки нажмите /start`
-              );
-          }
-      } catch (error) {
-          console.error('Start command error:', error);
-          await ctx.reply('Произошла ошибка. Пожалуйста, попробуйте позже.');
+      if (isSubscribed) {
+        await handleSubscribedUser(ctx, username, referralResult);
+      } else {
+        await askForSubscription(ctx);
       }
+    } catch (error) {
+      console.error('Start error:', error);
+      await ctx.reply('Произошла ошибка. Пожалуйста, попробуйте позже.');
+    }
   });
+
+  bot.hears('🔗 Реферальная ссылка', async (ctx) => {
+    try {
+      const referralLink = await generateReferralLink(ctx);
+      const user = await prisma.user.findUnique({
+        where: { userId: Number(ctx.from.id) },
+        include: { _count: { select: { referrals: true } } }
+      });
+
+      await ctx.reply(
+        `🎁 *Реферальная программа*\n\n` +
+        `Приглашайте друзей и получайте баллы!\n\n` +
+        `🔗 Ваша ссылка:\n` +
+        `${referralLink}\n\n` +
+        `👥 Приглашено: ${user?._count?.referrals || 0} человек\n` +
+        `⭐ Ваши баллы: ${user?.points || 0}`,
+        { parse_mode: 'Markdown' }
+      );
+    } catch (error) {
+      console.error('Referral link error:', error);
+      await ctx.reply('Произошла ошибка при генерации ссылки.');
+    }
+  });
+  bot.hears('ℹ️ Помощь', async (ctx) => {
+    try {
+      await ctx.reply(
+        `За помошью обрашайтесь @nurullayev_me`
+      );
+    } catch (error) {
+      console.error('Referral link error:', error);
+      await ctx.reply('Произошла ошибка при помощь.');
+    }
+  });
+
+
+}
+
+
+async function checkSubscription(ctx) {
+  try {
+    const [channelMember, groupMember] = await Promise.all([
+      ctx.telegram.getChatMember('@indiga_test_channel', ctx.from.id),
+      ctx.telegram.getChatMember('@indigatestgruppa', ctx.from.id)
+    ]);
+
+    const isChannelSubscribed = ['member', 'administrator', 'creator'].includes(channelMember.status);
+    const isGroupSubscribed = ['member', 'administrator', 'creator'].includes(groupMember.status);
+
+    return isChannelSubscribed && isGroupSubscribed;
+  } catch (error) {
+    console.error('Subscription check error:', error);
+    return false;
+  }
+}
+
+async function showMainMenu(ctx) {
+  await ctx.reply('Главное меню:', getMainKeyboard());
+}
+
+
+
+
+async function handleSubscribedUser(ctx, username, referralResult) {
+  let welcomeMessage = `👋 Добро пожаловать, ${username}!`;
+
+  // Отправка уведомления в группу
+  if (process.env.GROUP_CHAT_ID) {
+    try {
+      if (referralResult?.referrer) {
+        welcomeMessage += `\n\nТебя пригласил: @${referralResult.referrer.username || 'Аноним'}`;
+
+        await ctx.telegram.sendMessage(
+          process.env.GROUP_CHAT_ID,
+          `🎉 Новый участник по рефералу!\n\n` +
+          `К нам присоединился: @${username}\n` +
+          `По приглашению: @${referralResult.referrer.username || 'Аноним'}\n` +
+          `Давайте поприветствуем! 👋`
+        );
+      } else {
+        await ctx.telegram.sendMessage(
+          process.env.GROUP_CHAT_ID,
+          `🎉 Новый участник!\n\n` +
+          `К нам присоединился: @${username}\n` +
+          `Давайте поприветствуем! 👋`
+        );
+      }
+    } catch (groupError) {
+      console.error('Ошибка отправки в группу:', groupError);
+    }
+  }
+
+  await ctx.reply(welcomeMessage);
+  await showMainMenu(ctx);
 }
