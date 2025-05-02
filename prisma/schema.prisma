@@ -8,14 +8,27 @@ datasource db {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  userId       BigInt   @unique
+  id           Int        @id @default(autoincrement())
+  userId       BigInt     @unique
   username     String?
   firstName    String?
   referrerId   BigInt?
-  points       Int      @default(0)
-  isSubscribed Boolean  @default(false)
-  joinedAt     DateTime @default(now())
+  points       Int        @default(0)
+  isSubscribed Boolean    @default(false)
+  joinedAt     DateTime   @default(now())
+  referrals    Referral[]
 
   @@map("users")
+}
+
+model Referral {
+  id         Int      @id @default(autoincrement())
+  referrerId BigInt
+  referredId BigInt   @unique
+  createdAt  DateTime @default(now())
+  bonusGiven Boolean  @default(false)
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+
+  @@map("referrals")
 }

@@ -1,5 +1,5 @@
 export default function leaderboardCommand(bot, prisma) {
-    bot.command('leaderboard', async (ctx) => {
+    bot.hears('🏆 Топ 10 лидеров', async (ctx) => {
       try {
         const topUsers = await prisma.user.findMany({
           where: { points: { gt: 0 } },
