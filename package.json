@@ -1,18 +1,18 @@
 {
-  "name": "indiga-bot",
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "start": "nodemon src/bot.js",
-    "migrate": "npx prisma migrate dev --name init",
-    "prisma:studio": "npx prisma studio"
-  },
-  "dependencies": {
-    "@prisma/client": "^6.7.0",
-    "dotenv": "^16.5.0",
-    "node-cron": "^3.0.3",
-    "nodemon": "^3.1.10",
-    "prisma": "^6.7.0",
-    "telegraf": "^4.16.3"
-  }
+	"name": "indiga-bot",
+	"version": "1.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "nodemon src/bot.js",
+		"migrate": "npx prisma migrate dev --name init",
+		"prisma:studio": "npx prisma studio"
+	},
+	"dependencies": {
+		"@prisma/client": "^6.7.0",
+		"dotenv": "^16.5.0",
+		"node-cron": "^3.0.3",
+		"nodemon": "^3.1.10",
+		"prisma": "^6.7.0",
+		"telegraf": "^4.16.3"
+	}
 }
