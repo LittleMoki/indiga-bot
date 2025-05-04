@@ -1,3 +1,5 @@
+import { askForSubscriptionKeyboard } from '../keyboards.js'
+
 export default function createSubscriptionCheck(prisma) {
 	return async (ctx, next) => {
 		if (!ctx.message || !ctx.from) return next()
@@ -55,23 +57,7 @@ export default function createSubscriptionCheck(prisma) {
 						'1. Канал: @indiga_test_channel\n' +
 						'2. Группу: @indigatestgruppa\n\n' +
 						'После подписки нажмите /start',
-					{
-						reply_markup: {
-							inline_keyboard: [
-								[
-									{
-										text: 'Открыть канал',
-										url: 'https://t.me/indiga_test_channel',
-									},
-									{
-										text: 'Открыть группу',
-										url: 'https://t.me/indigatestgruppa',
-									},
-								],
-								[{ text: 'Я подписался', callback_data: 'check_subscription' }],
-							],
-						},
-					}
+					askForSubscriptionKeyboard()
 				)
 				return
 			}
