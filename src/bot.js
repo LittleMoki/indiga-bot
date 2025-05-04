@@ -69,16 +69,6 @@ bot.action('check_subscription', async ctx => {
 			await bot.handleUpdate(fakeUpdate)
 
 			// Удаляем сообщение об успехе через 3 секунды
-			setTimeout(async () => {
-				try {
-					await ctx.telegram.deleteMessage(
-						successMessage.chat.id,
-						successMessage.message_id
-					)
-				} catch (e) {
-					console.error('Error deleting success message:', e)
-				}
-			}, 3000)
 		} else {
 			// Если пользователь не подписан, показываем новое сообщение с инструкциями
 			await ctx.reply(

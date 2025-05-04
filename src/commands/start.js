@@ -11,17 +11,19 @@ export default function startCommand(bot, prisma) {
 		const username = ctx.from.username || 'Новый пользователь'
 
 		try {
-			// Обработка реферальной ссылки
-			const referralResult = await handleReferral(ctx, prisma)
+			// 1. Сначала обрабатываем реферальную ссылку
+			if (referrerId && referrerId !== userId.toString()) {
+				await handleReferral(ctx, prisma, referrerId)
+			}
 
-			// Проверка подписки
+			// 2. Затем проверяем подписку
 			const isSubscribed = await checkSubscription(ctx)
 
-			// Создание/обновление пользователя
+			// 3. Создаем/обновляем пользователя
 			await prisma.user.upsert({
-				where: { userId: Number(userId) },
+				where: { userId: BigInt(userId) },
 				create: {
-					userId: Number(userId),
+					userId: BigInt(userId),
 					username: ctx.from.username,
 					firstName: ctx.from.first_name,
 					isSubscribed,
@@ -31,8 +33,9 @@ export default function startCommand(bot, prisma) {
 				},
 			})
 
+			// 4. Обрабатываем в зависимости от подписки
 			if (isSubscribed) {
-				await handleSubscribedUser(ctx, username, referralResult)
+				await handleSubscribedUser(ctx, username)
 			} else {
 				await askForSubscription(ctx)
 			}
@@ -102,32 +105,26 @@ async function showMainMenu(ctx) {
 async function handleSubscribedUser(ctx, username, referralResult) {
 	let welcomeMessage = `👋 Добро пожаловать, ${username}!`
 
-	// Отправка уведомления в группу
-	// if (process.env.GROUP_CHAT_ID) {
-	//   try {
-	//     if (referralResult?.referrer) {
-	//       welcomeMessage += `\n\nТебя пригласил: @${referralResult.referrer.username || 'Аноним'}`;
-
-	//       await ctx.telegram.sendMessage(
-	//         process.env.GROUP_CHAT_ID,
-	//         `🎉 Новый участник по рефералу!\n\n` +
-	//         `К нам присоединился: @${username}\n` +
-	//         `По приглашению: @${referralResult.referrer.username || 'Аноним'}\n` +
-	//         `Давайте поприветствуем! 👋`
-	//       );
-	//     } else {
-	//       await ctx.telegram.sendMessage(
-	//         process.env.GROUP_CHAT_ID,
-	//         `🎉 Новый участник!\n\n` +
-	//         `К нам присоединился: @${username}\n` +
-	//         `Давайте поприветствуем! 👋`
-	//       );
-	//     }
-	//   } catch (groupError) {
-	//     console.error('Ошибка отправки в группу:', groupError);
-	//   }
-	// }
-
 	await ctx.reply(welcomeMessage)
 	await showMainMenu(ctx)
+}
+
+async function askForSubscription(ctx) {
+	await ctx.reply(
+		'Для использования бота подпишитесь на:\n' +
+			'1. Канал: @indiga_test_channel\n' +
+			'2. Группу: @indigatestgruppa\n\n' +
+			'После подписки нажмите /start',
+		{
+			reply_markup: {
+				inline_keyboard: [
+					[
+						{ text: 'Открыть канал', url: 'https://t.me/indiga_test_channel' },
+						{ text: 'Открыть группу', url: 'https://t.me/indigatestgruppa' },
+					],
+					[{ text: 'Я подписался', callback_data: 'check_subscription' }],
+				],
+			},
+		}
+	)
 }
