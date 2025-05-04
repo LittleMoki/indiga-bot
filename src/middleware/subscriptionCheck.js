@@ -24,7 +24,10 @@ export default function createSubscriptionCheck(prisma) {
 
 			// Если пользователя нет в базе - просим начать с /start
 			if (!user) {
-				await ctx.reply('Пожалуйста, сначала запустите бота командой /start')
+				await ctx.telegram.sendMessage(
+					Number(user.userId),
+					'Пожалуйста, сначала запустите бота командой /start'
+				)
 				return
 			}
 
