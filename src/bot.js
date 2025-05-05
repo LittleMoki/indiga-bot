@@ -107,8 +107,8 @@ startCommand(bot, prisma)
 leaderboardCommand(bot, prisma)
 
 // Schedule daily leaderboard at 20:00
-// cron.schedule('0 * * * *', () => sendDailyLeaderboard(bot, prisma))
-cron.schedule('*/1 * * * *', () => sendDailyLeaderboard(bot, prisma))
+cron.schedule('0 * * * *', () => sendDailyLeaderboard(bot, prisma))
+// cron.schedule('*/1 * * * *', () => sendDailyLeaderboard(bot, prisma))
 // Start bot
 bot
 	.launch()
