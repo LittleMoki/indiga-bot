@@ -6,6 +6,7 @@ import { Telegraf } from 'telegraf'
 import leaderboardCommand from './commands/leaderboard.js'
 import startCommand from './commands/start.js'
 import { getMainKeyboard } from './keyboards.js'
+import { privateChatOnly } from './middleware/privateChatOnly.js'
 import createSubscriptionCheck from './middleware/subscriptionCheck.js'
 import { sendDailyLeaderboard } from './utils/sendLeaderboard.js'
 
@@ -16,7 +17,7 @@ const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN)
 
 // Middleware
 bot.use(createSubscriptionCheck(prisma))
-
+bot.use(privateChatOnly)
 // Обработчик кнопки проверки подписки
 bot.action('check_subscription', async ctx => {
 	try {
@@ -50,7 +51,7 @@ bot.action('check_subscription', async ctx => {
 			})
 
 			// Отправляем сообщение об успешной подписке
-			const successMessage = await ctx.reply(
+			await ctx.reply(
 				'✅ Вы подписаны на все необходимые каналы!',
 				getMainKeyboard()
 			)
@@ -106,8 +107,8 @@ startCommand(bot, prisma)
 leaderboardCommand(bot, prisma)
 
 // Schedule daily leaderboard at 20:00
-cron.schedule('0 20 * * *', () => sendDailyLeaderboard(bot, prisma))
-
+// cron.schedule('0 * * * *', () => sendDailyLeaderboard(bot, prisma))
+cron.schedule('*/1 * * * *', () => sendDailyLeaderboard(bot, prisma))
 // Start bot
 bot
 	.launch()

@@ -1,6 +1,5 @@
 import { askForSubscriptionKeyboard, getMainKeyboard } from '../keyboards.js'
 import { generateReferralLink, handleReferral } from '../utils/referralUtils.js'
-const userLastMessageIds = new Map();
 
 export default function startCommand(bot, prisma) {
 	bot.start(async ctx => {
@@ -103,7 +102,7 @@ async function showMainMenu(ctx) {
 	await ctx.reply('Главное меню:', getMainKeyboard())
 }
 
-async function handleSubscribedUser(ctx, username, referralResult) {
+async function handleSubscribedUser(ctx, username) {
 	let welcomeMessage = `👋 Добро пожаловать, ${username}!`
 
 	await ctx.reply(welcomeMessage)
