@@ -41,11 +41,11 @@ export default function startCommand(bot, prisma) {
 			}
 		} catch (error) {
 			console.error('Start error:', error)
-			await ctx.reply('Произошла ошибка. Пожалуйста, попробуйте позже.')
+			await ctx.reply("Xatolik yuz berdi. Iltimos, keyinroq urunib ko'ring.")
 		}
 	})
 
-	bot.hears('🔗 Реферальная ссылка', async ctx => {
+	bot.hears('🔗 Referal havola', async ctx => {
 		try {
 			const referralLink = await generateReferralLink(ctx)
 			const user = await prisma.user.findUnique({
@@ -54,25 +54,25 @@ export default function startCommand(bot, prisma) {
 			})
 
 			await ctx.reply(
-				`🎁 *Реферальная программа*\n\n` +
-					`Приглашайте друзей и получайте баллы!\n\n` +
-					`🔗 Ваша ссылка:\n` +
+				`🎁 *Referal dasturi* \n\n` +
+					`Do‘stlaringizni taklif qiling va ballar to‘plang! \n\n` +
+					`🔗 Sizning havolangiz: \n` +
 					`${referralLink}\n\n` +
-					`👥 Приглашено: ${user?._count?.referrals || 0} человек\n` +
-					`⭐ Ваши баллы: ${user?.points || 0}`,
+					`👥 Taklif qilinganlar: ${user?._count?.referrals || 0} kishi \n` +
+					`⭐ Ballaringiz: ${user?.points || 0}`,
 				{ parse_mode: 'Markdown' }
 			)
 		} catch (error) {
 			console.error('Referral link error:', error)
-			await ctx.reply('Произошла ошибка при генерации ссылки.')
+			await ctx.reply("Xatolik yuz berdi. Iltimos, keyinroq urunib ko'ring.")
 		}
 	})
-	bot.hears('ℹ️ Помощь', async ctx => {
+	bot.hears('ℹ️ Yordam', async ctx => {
 		try {
-			await ctx.reply(`За помошью обрашайтесь @nurullayev_me`)
+			await ctx.reply(`🆘 Yordam kerakmi? \n\n` + `👉 @nurullayev_me`)
 		} catch (error) {
 			console.error('Referral link error:', error)
-			await ctx.reply('Произошла ошибка при помощь.')
+			await ctx.reply("Xatolik yuz berdi. Iltimos, keyinroq urunib ko'ring.")
 		}
 	})
 }
@@ -99,11 +99,11 @@ async function checkSubscription(ctx) {
 }
 
 async function showMainMenu(ctx) {
-	await ctx.reply('Главное меню:', getMainKeyboard())
+	await ctx.reply('Asosiy menyu:', getMainKeyboard())
 }
 
 async function handleSubscribedUser(ctx, username) {
-	let welcomeMessage = `👋 Добро пожаловать, ${username}!`
+	let welcomeMessage = `👋 Xush kelibsiz! ${username}!`
 
 	await ctx.reply(welcomeMessage)
 	await showMainMenu(ctx)
@@ -111,10 +111,10 @@ async function handleSubscribedUser(ctx, username) {
 
 async function askForSubscription(ctx) {
 	await ctx.reply(
-		'Для использования бота подпишитесь на:\n' +
-			'1. Канал: @indiga_test_channel\n' +
-			'2. Группу: @indigatestgruppa\n\n' +
-			'После подписки нажмите /start',
+		"Botdan foydalanish uchun quyidagilarga obuna bo'ling:\n" +
+			'1. Kanal: @indiga_test_channel\n' +
+			'2. Guruh: @indigatestgruppa\n\n' +
+			'Obuna bo‘lganingizdan so‘ng /start tugmasini bosing.',
 		askForSubscriptionKeyboard()
 	)
 }

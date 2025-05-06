@@ -21,7 +21,7 @@ bot.use(privateChatOnly)
 // Обработчик кнопки проверки подписки
 bot.action('check_subscription', async ctx => {
 	try {
-		await ctx.answerCbQuery('Проверяем подписки...')
+		await ctx.answerCbQuery('Obunalarni tekshiryapmiz...')
 
 		// Удаляем предыдущее сообщение с кнопками
 		try {
@@ -52,7 +52,7 @@ bot.action('check_subscription', async ctx => {
 
 			// Отправляем сообщение об успешной подписке
 			await ctx.reply(
-				'✅ Вы подписаны на все необходимые каналы!',
+				'✅ Siz barcha kerakli kanallarga obuna bo‘ldingiz!',
 				getMainKeyboard()
 			)
 
@@ -73,25 +73,25 @@ bot.action('check_subscription', async ctx => {
 		} else {
 			// Если пользователь не подписан, показываем новое сообщение с инструкциями
 			await ctx.reply(
-				'❌ Вы еще не подписаны на все необходимые каналы.\n\n' +
-					'Для продолжения подпишитесь на:\n' +
-					'1. Канал: @indiga_test_channel\n' +
-					'2. Группу: @indigatestgruppa\n\n' +
-					'После подписки нажмите кнопку "Я подписался"',
+				'❌ Siz hali barcha kerakli kanallarga obuna bo‘lmagansiz.\n\n' +
+					'Davom etish uchun quyidagilarga obuna bo‘ling:\n' +
+					'1. Kanal: @indiga_test_channel\n' +
+					'2. Guruh: @indigatestgruppa\n\n' +
+					'Obuna bo‘lgach, "Obuna bo‘ldim" tugmasini bosing.',
 				{
 					reply_markup: {
 						inline_keyboard: [
 							[
 								{
-									text: 'Открыть канал',
+									text: 'Kanalni ochish',
 									url: 'https://t.me/indiga_test_channel',
 								},
 								{
-									text: 'Открыть группу',
+									text: 'Guruhni ochish',
 									url: 'https://t.me/indigatestgruppa',
 								},
 							],
-							[{ text: 'Я подписался', callback_data: 'check_subscription' }],
+							[{ text: 'Obuna bo‘ldim', callback_data: 'check_subscription' }],
 						],
 					},
 				}
@@ -99,7 +99,9 @@ bot.action('check_subscription', async ctx => {
 		}
 	} catch (error) {
 		console.error('Check subscription error:', error)
-		await ctx.answerCbQuery('Произошла ошибка, попробуйте позже')
+		await ctx.answerCbQuery(
+			"Xatolik yuz berdi. Iltimos, keyinroq urunib ko'ring."
+		)
 	}
 })
 // Commands
@@ -108,7 +110,6 @@ leaderboardCommand(bot, prisma)
 
 // Schedule daily leaderboard at 20:00
 cron.schedule('0 * * * *', () => sendDailyLeaderboard(bot, prisma))
-// cron.schedule('*/1 * * * *', () => sendDailyLeaderboard(bot, prisma))
 // Start bot
 bot
 	.launch()

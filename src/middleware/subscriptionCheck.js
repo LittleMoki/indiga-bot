@@ -28,7 +28,7 @@ export default function createSubscriptionCheck(prisma) {
 			if (!user) {
 				await ctx.telegram.sendMessage(
 					Number(user.userId),
-					'Пожалуйста, сначала запустите бота командой /start'
+					'Iltimos, avval /start buyrug‘i orqali botni ishga tushiring.'
 				)
 				return
 			}
@@ -53,10 +53,10 @@ export default function createSubscriptionCheck(prisma) {
 			if (!isCurrentlySubscribed) {
 				await ctx.telegram.sendMessage(
 					Number(user.userId),
-					'Для использования бота необходимо быть подписанным на:\n' +
-						'1. Канал: @indiga_test_channel\n' +
-						'2. Группу: @indigatestgruppa\n\n' +
-						'После подписки нажмите /start',
+					'Botdan foydalanish uchun quyidagilarga obuna bo‘lishingiz kerak:\n' +
+						'1. Kanal: @indiga_test_channel\n' +
+						'2. Guruh: @indigatestgruppa\n\n' +
+						'Obuna bo‘lgach, /start tugmasini bosing.',
 					askForSubscriptionKeyboard()
 				)
 				return
