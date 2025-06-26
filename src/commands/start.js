@@ -12,6 +12,7 @@ export default function startCommand(bot, prisma) {
 
 		try {
 			// 1. Сначала обрабатываем реферальную ссылку
+
 			if (referrerId && referrerId !== userId.toString()) {
 				await handleReferral(ctx, prisma, referrerId)
 			}
@@ -37,6 +38,14 @@ export default function startCommand(bot, prisma) {
 			if (isSubscribed) {
 				await handleSubscribedUser(ctx, username)
 			} else {
+				await ctx.reply(`
+Assalomu alaykum, Indiga botiga xush kelibsiz!  
+🎁 Sovrinli tanlovimizda ishtirok eting va 1 000 000 so‘mgacha pul yutib olish imkoniyatini qo‘ldan boy bermang!
+
+🎯 Qoidalar oddiy:  
+— Obuna bo‘ling  
+— Do‘stlaringizni taklif qiling  
+— Eng faol ishtirokchilar sovrin yutadi!`)
 				await askForSubscription(ctx)
 			}
 		} catch (error) {
@@ -99,13 +108,10 @@ async function checkSubscription(ctx) {
 }
 
 async function showMainMenu(ctx) {
-	await ctx.reply('Asosiy menyu:', getMainKeyboard())
+	getMainKeyboard()
 }
 
 async function handleSubscribedUser(ctx, username) {
-	let welcomeMessage = `👋 Xush kelibsiz! ${username}!`
-
-	await ctx.reply(welcomeMessage)
 	await showMainMenu(ctx)
 }
 
