@@ -1,4 +1,6 @@
 // keyboards.js
+
+// Главное меню
 export function getMainKeyboard() {
 	return {
 		reply_markup: {
@@ -8,6 +10,7 @@ export function getMainKeyboard() {
 	}
 }
 
+// Клавиатура для подписки
 export function askForSubscriptionKeyboard() {
 	return {
 		reply_markup: {
@@ -17,6 +20,19 @@ export function askForSubscriptionKeyboard() {
 					{ text: 'Guruhni ochish', url: 'https://t.me/indigatestgruppa' },
 				],
 				[{ text: 'Obuna bo‘ldim', callback_data: 'check_subscription' }],
+			],
+		},
+	}
+}
+
+// Клавиатура с реферальной ссылкой (для подписанных)
+export function referralKeyboard(referralLink) {
+	return {
+		reply_markup: {
+			inline_keyboard: [
+				[
+					{ text: 'Taklif qilish', url: referralLink },
+				],
 			],
 		},
 	}

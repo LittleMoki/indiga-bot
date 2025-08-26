@@ -1,3 +1,4 @@
+import { inlineKeyboard } from 'telegraf/markup'
 import { askForSubscriptionKeyboard, getMainKeyboard } from '../keyboards.js'
 import { generateReferralLink, handleReferral } from '../utils/referralUtils.js'
 
@@ -35,18 +36,47 @@ export default function startCommand(bot, prisma) {
 			})
 
 			// 4. Обрабатываем в зависимости от подписки
-			if (isSubscribed) {
-				await handleSubscribedUser(ctx, username)
-			} else {
-				await ctx.reply(`
-Assalomu alaykum, Indiga botiga xush kelibsiz!  
-🎁 Sovrinli tanlovimizda ishtirok eting va 1 000 000 so‘mgacha pul yutib olish imkoniyatini qo‘ldan boy bermang!
+			// 			if (isSubscribed) {
+			// 				await handleSubscribedUser(ctx, username)
+			// 			} else {
+			// 				await ctx.reply(`
+			// Assalomu alaykum, Indiga botiga xush kelibsiz!
+			// 🎁 Sovrinli tanlovimizda ishtirok eting va 1 000 000 so‘mgacha pul yutib olish imkoniyatini qo‘ldan boy bermang!
 
-🎯 Qoidalar oddiy:  
-— Obuna bo‘ling  
-— Do‘stlaringizni taklif qiling  
-— Eng faol ishtirokchilar sovrin yutadi!`)
-				await askForSubscription(ctx)
+			// 🎯 Qoidalar oddiy:
+			// — Obuna bo‘ling
+			// — Do‘stlaringizni taklif qiling
+			// — Eng faol ishtirokchilar sovrin yutadi!`)
+			// 				await askForSubscription(ctx)
+			// 			}
+
+			// 4. Логика
+			if (isSubscribed) {
+				// Подписан → сразу показываем реферальную ссылку
+				await sendReferralInfo(ctx, prisma)
+			} else {
+				// Не подписан → приветствие + "псевдо" ссылка
+				await ctx.reply(
+					`Assalomu alaykum, Indiga botiga xush kelibsiz!\n🎁 Sovrinli tanlovimizda ishtirok eting va 1 000 000 so‘mgacha pul yutib olish imkoniyatini qo‘ldan boy bermang!\n\n🎯 Qoidalar oddiy:\n— Obuna bo‘ling\n— Do‘stlaringizni taklif qiling\n— Eng faol ishtirokchilar sovrin yutadi!`
+				)
+
+				await ctx.reply(
+					`🎁 *Referal dasturi* \n\n` +
+						`Do‘stlaringizni taklif qiling va ballar to‘plang! \n\n`,
+					{
+						parse_mode: 'Markdown',
+						reply_markup: {
+							inline_keyboard: [
+								[
+									{
+										text: 'Taklif qilish',
+										callback_data: 'check_subscription',
+									},
+								],
+							],
+						},
+					}
+				)
 			}
 		} catch (error) {
 			console.error('Start error:', error)
@@ -84,6 +114,39 @@ Assalomu alaykum, Indiga botiga xush kelibsiz!
 			await ctx.reply("Xatolik yuz berdi. Iltimos, keyinroq urunib ko'ring.")
 		}
 	})
+	// 🔗 Кнопка проверки подписки
+	bot.action('check_subscription', async ctx => {
+		try {
+			const isSubscribed = await checkSubscription(ctx)
+			if (isSubscribed) {
+				await ctx.answerCbQuery('✅ Siz muvaffaqiyatli obuna bo‘ldingiz!')
+				await sendReferralInfo(ctx, prisma, true, ctx) // true = редактируем сообщение
+			} else {
+				await ctx.answerCbQuery("❌ Siz hali obuna bo'lmadingiz!", {
+					show_alert: true,
+				})
+			}
+		} catch (error) {
+			console.error('Check subscription error:', error)
+			await ctx.reply('Xatolik yuz berdi. Keyinroq urinib ko‘ring.')
+		}
+	})
+
+	// 🔗 Кнопка "Taklif qilish"
+	bot.action('get_ref_link', async ctx => {
+		try {
+			const isSubscribed = await checkSubscription(ctx)
+			if (!isSubscribed) {
+				return ctx.answerCbQuery('❌ Avval kanal va guruhga obuna bo‘ling!', {
+					show_alert: true,
+				})
+			}
+			await sendReferralInfo(ctx, prisma)
+		} catch (error) {
+			console.error('Get referral link error:', error)
+			await ctx.reply("Xatolik yuz berdi. Iltimos, keyinroq urunib ko'ring.")
+		}
+	})
 }
 
 async function checkSubscription(ctx) {
@@ -106,21 +169,23 @@ async function checkSubscription(ctx) {
 		return false
 	}
 }
+async function sendReferralInfo(ctx, prisma, edit = false) {
+	const referralLink = await generateReferralLink(ctx)
+	const user = await prisma.user.findUnique({
+		where: { userId: Number(ctx.from.id) },
+		include: { _count: { select: { referrals: true } } },
+	})
 
-async function showMainMenu(ctx) {
-	getMainKeyboard()
-}
+	const text =
+		`🎁 *Referal dasturi* \n\n` +
+		`Do‘stlaringizni taklif qiling va ballar to‘plang! \n\n` +
+		`👥 Taklif qilinganlar: ${user?._count?.referrals || 0} kishi \n` +
+		`⭐ Ballaringiz: ${user?.points || 0}\n\n` +
+		`🔗 Sizning havolangiz: \n${referralLink}`
 
-async function handleSubscribedUser(ctx, username) {
-	await showMainMenu(ctx)
-}
-
-async function askForSubscription(ctx) {
-	await ctx.reply(
-		"Botdan foydalanish uchun quyidagilarga obuna bo'ling:\n" +
-			'1. Kanal: @indiga_test_channel\n' +
-			'2. Guruh: @indigatestgruppa\n\n' +
-			'Obuna bo‘lganingizdan so‘ng /start tugmasini bosing.',
-		askForSubscriptionKeyboard()
-	)
+	if (edit && ctx.callbackQuery?.message) {
+		await ctx.editMessageText(text, { parse_mode: 'Markdown' })
+	} else {
+		await ctx.reply(text, { parse_mode: 'Markdown' })
+	}
 }
