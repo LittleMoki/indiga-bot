@@ -1,5 +1,3 @@
-import { inlineKeyboard } from 'telegraf/markup'
-import { askForSubscriptionKeyboard, getMainKeyboard } from '../keyboards.js'
 import { generateReferralLink, handleReferral } from '../utils/referralUtils.js'
 
 export default function startCommand(bot, prisma) {
@@ -34,21 +32,6 @@ export default function startCommand(bot, prisma) {
 					isSubscribed,
 				},
 			})
-
-			// 4. Обрабатываем в зависимости от подписки
-			// 			if (isSubscribed) {
-			// 				await handleSubscribedUser(ctx, username)
-			// 			} else {
-			// 				await ctx.reply(`
-			// Assalomu alaykum, Indiga botiga xush kelibsiz!
-			// 🎁 Sovrinli tanlovimizda ishtirok eting va 1 000 000 so‘mgacha pul yutib olish imkoniyatini qo‘ldan boy bermang!
-
-			// 🎯 Qoidalar oddiy:
-			// — Obuna bo‘ling
-			// — Do‘stlaringizni taklif qiling
-			// — Eng faol ishtirokchilar sovrin yutadi!`)
-			// 				await askForSubscription(ctx)
-			// 			}
 
 			// 4. Логика
 			if (isSubscribed) {
