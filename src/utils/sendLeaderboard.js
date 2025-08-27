@@ -1,4 +1,4 @@
-export async function sendDailyLeaderboard(bot, prisma) {
+export async function sendLeaderboard(bot, prisma) {
 	try {
 		const topUsers = await prisma.user.findMany({
 			where: { points: { gt: 0 } },

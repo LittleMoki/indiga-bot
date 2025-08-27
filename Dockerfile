@@ -1,12 +1,19 @@
-FROM node:18-alpine
+# Базовый образ Node.js
+FROM node:20-alpine
 
+# Рабочая директория
 WORKDIR /app
 
+# Установим зависимости
 COPY package*.json ./
-RUN npm install
 
+RUN npm install --production
+
+# Скопируем проект
 COPY . .
 
-RUN npx prisma generate
+# Prisma migrate для миграции базы данных
+RUN npx prisma migrate dev 
 
-CMD ["npm", "start"]
+# Запуск бота
+CMD npm run dev

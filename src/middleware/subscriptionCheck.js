@@ -1,6 +1,7 @@
-import { askForSubscriptionKeyboard } from '../keyboards.js'
+import { askForSubscriptionKeyboard } from '../keyboards/subscriptionKeyboard.js'
+import { checkSubscription } from '../utils/subscription.js'
 
-export default function createSubscriptionCheck(prisma) {
+export default function subscriptionCheck(prisma) {
 	return async (ctx, next) => {
 		if (!ctx.message || !ctx.from) return next()
 
@@ -25,7 +26,7 @@ export default function createSubscriptionCheck(prisma) {
 			})
 
 			// Если пользователя нет в базе - просим начать с /start
-			if (!user) {
+			if (!user.userId) {
 				await ctx.telegram.sendMessage(
 					Number(user.userId),
 					'Iltimos, avval /start buyrug‘i orqali botni ishga tushiring.'
@@ -68,23 +69,5 @@ export default function createSubscriptionCheck(prisma) {
 			// В случае ошибки проверки - разрешаем продолжать (чтобы не блокировать бота)
 			return next()
 		}
-	}
-}
-
-// Вспомогательная функция проверки подписки
-async function checkSubscription(ctx) {
-	try {
-		const [channelMember, groupMember] = await Promise.all([
-			ctx.telegram.getChatMember('@indiga_test_channel', ctx.from.id),
-			ctx.telegram.getChatMember('@indigatestgruppa', ctx.from.id),
-		])
-
-		return (
-			['member', 'administrator', 'creator'].includes(channelMember.status) &&
-			['member', 'administrator', 'creator'].includes(groupMember.status)
-		)
-	} catch (error) {
-		console.error('Check subscription error:', error)
-		return false
 	}
 }
