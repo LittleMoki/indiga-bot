@@ -40,8 +40,7 @@ export function setupSubscriptionHandler(bot, prisma) {
 				await ctx.reply(
 					'❌ Siz hali barcha kerakli kanallarga obuna bo‘lmagansiz.\n\n' +
 						'Davom etish uchun quyidagilarga obuna bo‘ling:\n' +
-						'1. Kanal: @indiga_test_channel\n' +
-						'2. Guruh: @indigatestgruppa\n\n' +
+						'Kanal: @indiga_group\n' +
 						'Obuna bo‘lgach, "Obuna bo‘ldim" tugmasini bosing.',
 					askForSubscriptionKeyboard()
 				)

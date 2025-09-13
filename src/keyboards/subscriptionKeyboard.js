@@ -3,8 +3,7 @@ export function askForSubscriptionKeyboard() {
 		reply_markup: {
 			inline_keyboard: [
 				[
-					{ text: 'Kanalni ochish', url: 'https://t.me/indiga_test_channel' },
-					{ text: 'Guruhni ochish', url: 'https://t.me/indigatestgruppa' },
+					{ text: 'Kanalni ochish', url: 'https://t.me/indiga_group' },
 				],
 				[{ text: 'Obuna bo‘ldim', callback_data: 'check_subscription' }],
 			],

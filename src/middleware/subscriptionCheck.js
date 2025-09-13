@@ -35,14 +35,12 @@ export default function subscriptionCheck(prisma) {
 			}
 
 			// Проверяем текущий статус подписки
-			const [channelMember, groupMember] = await Promise.all([
-				ctx.telegram.getChatMember('@indiga_test_channel', userId),
-				ctx.telegram.getChatMember('@indigatestgruppa', userId),
+			const [channelMember] = await Promise.all([
+				ctx.telegram.getChatMember('@indiga_group', userId)
 			])
 
 			const isCurrentlySubscribed =
-				['member', 'administrator', 'creator'].includes(channelMember.status) &&
-				['member', 'administrator', 'creator'].includes(groupMember.status)
+				['member', 'administrator', 'creator'].includes(channelMember.status)
 
 			// Обновляем статус в базе
 			await prisma.user.update({
@@ -55,9 +53,8 @@ export default function subscriptionCheck(prisma) {
 				await ctx.telegram.sendMessage(
 					Number(user.userId),
 					'Botdan foydalanish uchun quyidagilarga obuna bo‘lishingiz kerak:\n' +
-						'1. Kanal: @indiga_test_channel\n' +
-						'2. Guruh: @indigatestgruppa\n\n' +
-						'Obuna bo‘lgach, /start tugmasini bosing.',
+						'1. Kanal: @indiga_group\n' +
+						'Obuna bo‘lgach, OBUNA BOLDIM tugmasini bosing.',
 					askForSubscriptionKeyboard()
 				)
 				return
